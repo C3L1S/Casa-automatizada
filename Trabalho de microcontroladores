@@ -1,0 +1,380 @@
+# Casa automatizada
+Victor c. 
+- Criou o código e a fiação na casa;
+Thales g.
+- Fez a casa;
+Utilizamos papelão, fita e cola quente na casa além de tinta em spray;
+na montagem foram:
+- Jumpers;
+- Oled;
+- Esp32;
+- Leds;
+- Protobord;
+- Dht11;
+- Ldr.
+ A casa é controlada pelo celular com o blink, acende leds, e mostra a leitura do ldr e do dht no celular;
+```
+////////////////////////
+/*  TRABALHO DE MICROCONTROLADORES
+ *  PROF: MARCOS CHAVES
+ *  CASA AUTOMATIZADA
+ *  FEITA POR: VICTOR DE S. CELIS E THALES G. ROBERTO
+ */
+/////////////////////////
+#define BLYNK_TEMPLATE_ID "TMPL11Q5UjDv"
+#define BLYNK_DEVICE_NAME "Automação residencial"
+#define BLYNK_AUTH_TOKEN "PruKe-KcMTr9SrOIDZIEBTTonlycE639"
+#define BLYNK_PRINT Serial
+///////////////////////////
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <stdlib.h>
+#define OLED_RESET     -1
+#define SCREEN_WIDTH 128 
+#define SCREEN_HEIGHT 32
+
+#include <DHT.h>
+#include <DHT_U.h>
+
+#include "WiFi.h"
+#include "WiFiClient.h"
+#include "BlynkSimpleEsp32.h"
+///////////////////////////
+char auth [] = BLYNK_AUTH_TOKEN;
+char ssid [] = "RoteadorPedro555555";
+char pass [] = "pedro3006";
+//////////////////////////
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+DHT dht (33, DHT11);
+BlynkTimer timer;
+//////////////////////////
+#define ledqua1 2
+#define ledqua2 4
+#define ledsal 5
+#define ledcoz 18
+#define ledfren 19
+#define ledfund 23
+#define sens1 32
+//////////////////////////
+BLYNK_WRITE (V0)
+{  
+  int val = param.asInt ();
+    digitalWrite (ledqua1, val);
+}
+
+BLYNK_WRITE (V1)
+{  
+  int val = param.asInt ();
+    digitalWrite (ledqua2, val);
+}
+
+BLYNK_WRITE (V2)
+{  
+  int val = param.asInt ();
+    digitalWrite (ledsal, val);
+}
+BLYNK_WRITE (V3)
+{  
+  int val = param.asInt ();
+    digitalWrite (ledcoz, val);
+}
+
+
+void setup ()
+{   
+  Serial.begin (115200);  
+  delay (10);
+  
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3c);
+  display.display(); 
+  delay(1000);
+  display.clearDisplay ();
+
+  dht.begin (); 
+  
+  pinMode (ledqua1, OUTPUT);
+  pinMode (ledqua2, OUTPUT);
+  pinMode (ledsal, OUTPUT);
+  pinMode (ledcoz, OUTPUT);
+  pinMode (ledfren, OUTPUT);
+  pinMode (ledfund, OUTPUT);
+
+  pinMode (sens1, INPUT);
+  
+  Blynk.begin (auth, ssid, pass);  
+  timer.setInterval (2000L, sensorDHT);
+}
+
+void sensorDHT ()
+{
+  float t = dht.readTemperature ();
+  float u = dht.readHumidity ();
+
+  if (isnan (t) || isnan (u))
+  {
+    return;
+  }
+
+  Blynk.virtualWrite (V4, t);
+  Blynk.virtualWrite (V5, u);
+  Blynk.virtualWrite (V6, analogRead (sens1));
+}
+
+void loop ()
+{
+  Blynk.run ();
+  timer.run ();
+////////////////////////////////////////// TESTE DE VALORES
+  if (analogRead (sens1) <= 1900)
+  {
+    digitalWrite (ledfren, HIGH);
+    digitalWrite (ledfund, HIGH);
+  }
+
+  else
+  {
+    digitalWrite (ledfren, LOW);
+    digitalWrite (ledfund, LOW);
+  }
+
+  Serial.print ("Tempe: ");
+  Serial.println (dht.readTemperature ());
+
+  Serial.print ("umida: ");
+  Serial.println (dht.readHumidity ());
+  
+  Serial.println (analogRead (32));
+  delay (2000);
+/////////////////////////////////////////////
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: ");
+  display.drawCircle(41, 13, 3, WHITE);
+  display.drawCircle(95, 13, 3, WHITE);
+  display.drawCircle(41, 23, 3, WHITE);
+  display.drawCircle(95, 23, 3, WHITE);
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.display();
+  display.clearDisplay ();
+  
+  if (digitalRead (ledqua1) == 1)
+  {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: ");
+  display.drawCircle(95, 13, 3, WHITE);
+  display.drawCircle(41, 23, 3, WHITE);
+  display.drawCircle(95, 23, 3, WHITE);
+  display.fillCircle(41, 13, 3, WHITE); 
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.display();  
+  display.clearDisplay ();
+  }
+
+  else if (digitalRead (ledqua2) == 1)
+  {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: ");
+  display.drawCircle(41, 13, 3, WHITE);
+  //display.drawCircle(97, 13, 3, WHITE);
+  display.drawCircle(41, 23, 3, WHITE);
+  display.drawCircle(95, 23, 3, WHITE);
+  display.fillCircle(95, 13, 3, WHITE);  
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.display();
+  display.clearDisplay ();
+  }
+
+  else if (digitalRead (ledsal) == 1)
+  {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: "); 
+  display.drawCircle(41, 13, 3, WHITE);
+  display.drawCircle(95, 13, 3, WHITE);
+  //display.drawCircle(35, 23, 3, WHITE);
+  display.drawCircle(95, 23, 3, WHITE);
+  display.fillCircle(41, 23, 3, WHITE);
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE); 
+  display.display();
+  display.clearDisplay ();
+  }
+
+  else if (digitalRead (ledcoz) == 1)
+  {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: ");
+  display.drawCircle(41, 13, 3, WHITE);
+  display.drawCircle(95, 13, 3, WHITE); 
+  display.drawCircle(41, 23, 3, WHITE);
+  //display.drawCircle(41, 23, 3, WHITE);
+  display.fillCircle(95, 23, 3, WHITE);  
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.display();
+  display.clearDisplay ();
+  }
+  
+  else if (digitalRead (ledqua1) == 1 && digitalRead (ledqua2)== 1 && digitalRead (ledsal)== 1 && digitalRead (ledcoz) == 1)
+  {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: ");
+  display.drawCircle(41, 13, 3, WHITE);
+  display.drawCircle(95, 13, 3, WHITE); 
+  display.drawCircle(41, 23, 3, WHITE);
+  //display.drawCircle(41, 23, 3, WHITE);
+  display.fillCircle(41, 13, 3, WHITE);
+  display.fillCircle(95, 13, 3, WHITE);
+  display.fillCircle(41, 23, 3, WHITE);
+  display.fillCircle(95, 23, 3, WHITE);  
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.display();
+  display.clearDisplay ();
+  }
+
+  else if (analogRead (sens1) <= 1300)
+  {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor (0, 0);
+  display.println ("Monitoramento: ");
+  display.setCursor (1, 10);
+  display.println ("Luz 1: ");
+  display.setCursor (55, 10);
+  display.println ("Luz 2: ");
+  display.setCursor (2, 20);
+  display.println ("Luz 3: ");
+  display.setCursor (55, 20);
+  display.println ("Luz 4: ");
+  display.drawCircle(41, 13, 3, WHITE);
+  display.drawCircle(95, 13, 3, WHITE); 
+  display.drawCircle(41, 23, 3, WHITE);
+  display.drawCircle(95, 23, 3, WHITE);
+  display.drawRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.fillRoundRect(110, 0, 18, 8, 8, WHITE);
+  display.display();
+  display.clearDisplay ();
+  }
+
+/*if (digitalRead (ledqua1) == 1 || digitalRead (ledqua2) == 1)
+  {
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(20, 0);
+    display.println("Monitoramento: ");
+    display.setCursor (2, 20);    
+    display.println ("Luz do quarto ligado");
+    display.display ();
+    display.clearDisplay ();
+  }
+
+  else if (digitalRead (ledsal) == 1) 
+  {
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(20, 0);
+    display.println("Monitoramento: ");
+    display.setCursor (2, 20);    
+    display.println ("Luz da sala ligado");
+    display.display ();
+    display.clearDisplay ();
+  }
+
+  else if (digitalRead (ledcoz) == 1)
+  {
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(20, 0);
+    display.println("Monitoramento: ");
+    display.setCursor (2, 20);    
+    display.println ("Luz da cozinha ligado");
+    display.display ();
+    display.clearDisplay ();
+  }
+  
+   else if (analogRead (sens1) < 1500)
+  {
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(20, 0);
+    display.println("Monitoramento: ");
+    display.setCursor (1, 10);    
+    display.println ("Esta Noite");
+    display.display ();
+    display.clearDisplay ();
+  }
+
+  else if (analogRead (sens1) > 1500)
+  {
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(20, 0);
+    display.println("Monitoramento: ");
+    display.setCursor (1, 10);    
+    display.println ("Esta Dia");
+    display.display ();
+    display.clearDisplay ();
+  }*/
+}
+
+```
+
